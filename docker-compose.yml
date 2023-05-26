@@ -1,0 +1,55 @@
+version: "3.4"
+
+services:
+  hr_timesheet_server:
+#    container_name: hr_timesheet_server
+    volumes:
+      - ./src/grpc_server:/app/hr-timesheet
+    build: src/grpc_server
+    ports:
+      - "1997:1997"
+    expose:
+      - 1997
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_DRIVER: postgres
+      DB_USER: sendmail_service
+      DB_PASSWORD: secret
+      DB_HOST: ig_bot_db_sendmail
+      DB_PORT: 5432
+      DB_NAME: sendmail_service
+      SERVER_POST: 80
+      SERVER_GRPC_PORT: 1997
+      KAFKA_TOPIC_SEND_MAIL: sendmail_topic
+    networks:
+      - hr_timesheet_net
+  hr_timesheet_ui:
+#    container_name: hr_timesheet_ui
+    build: src/ui
+    volumes:
+      - ./src/ui:/app
+    ports:
+      - "3000:3000"
+    networks:
+      - hr_timesheet_net
+    links:
+      - envoy
+    command: npm start
+  envoy:
+#    container_name: envoy_proxy
+    image: envoyproxy/envoy-dev:e4955aed5694f9935d674419dbb364e744f697b4
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    depends_on:
+      - hr_timesheet_server
+    links:
+      - hr_timesheet_server
+    networks:
+      - hr_timesheet_net
+
+networks:
+  hr_timesheet_net:
+    driver: bridge

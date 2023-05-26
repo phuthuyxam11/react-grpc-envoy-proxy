@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+import "rpc_file.proto";
+
+
+option go_package = "powergate.com/hr_timesheet/api/pb";
+
+service HrTimeSheetService {
+  rpc UploadFile(FileUploadRequest) returns (stream FileUploadResponse){}
+//  rpc
+}
